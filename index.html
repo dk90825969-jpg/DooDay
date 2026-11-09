@@ -200,6 +200,31 @@ h1 {
     body { padding: 25px 12px; }
     .card { padding: 17px; }
 }
+    .actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.actions button {
+    flex: 1;
+    padding: 11px 8px;
+    border-radius: 9px;
+    border: 1px solid #3b3f4c;
+    background: #292d38;
+    color: #f4f4f5;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+#uncheckAll:hover {
+    border-color: #a78bfa;
+}
+
+#deleteAll:hover {
+    border-color: #f87171;
+    color: #f87171;
+}
 </style>
 </head>
 
@@ -223,6 +248,11 @@ h1 {
         <div class="progress">
             <div class="progress-fill" id="progressFill"></div>
         </div>
+        
+        <div class="actions">
+    <button id="uncheckAll">↻ Uncheck all</button>
+    <button id="deleteAll">♲ Delete all</button>
+</div>
 
         <div id="taskList"></div>
 
@@ -245,8 +275,18 @@ h1 {
 </div>
 
 <script>
+
 const STORAGE_KEY = "dooday-data";
-const today = new Date().toLocaleDateString("en-CA");
+
+function getLocalDate() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+let today = getLocalDate();
 
 document.getElementById("date").textContent =
     new Date().toLocaleDateString("en-US", {
@@ -264,16 +304,34 @@ let tasks = saved?.tasks || [
     { name: "Take my wallet", done: false }
 ];
 
-// Reset completed tasks when a new day begins.
-if (saved && saved.date !== today) {
-    tasks.forEach(task => task.done = false);
-}
-
 function saveTasks() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
         date: today,
         tasks: tasks
     }));
+}
+
+function checkNewDay() {
+    const newDate = getLocalDate();
+
+    if (newDate !== today) {
+        today = newDate;
+        tasks.forEach(task => task.done = false);
+        saveTasks();
+
+        document.getElementById("date").textContent =
+            new Date().toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "short",
+                day: "numeric"
+            });
+
+        renderTasks();
+    }
+}
+
+if (saved && saved.date !== today) {
+    tasks.forEach(task => task.done = false);
 }
 
 function renderTasks() {
@@ -287,6 +345,7 @@ function renderTasks() {
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.checked = task.done;
+
         checkbox.addEventListener("change", () => {
             tasks[index].done = checkbox.checked;
             saveTasks();
@@ -301,6 +360,7 @@ function renderTasks() {
         remove.className = "delete";
         remove.textContent = "×";
         remove.title = "Delete task";
+
         remove.addEventListener("click", () => {
             tasks.splice(index, 1);
             saveTasks();
@@ -313,15 +373,33 @@ function renderTasks() {
 
     const completed = tasks.filter(task => task.done).length;
     const total = tasks.length;
-    const percentage = total ? completed / total * 100 : 0;
 
     document.getElementById("progressText").textContent =
         `${completed}/${total} done`;
 
     document.getElementById("progressFill").style.width =
-        percentage + "%";
+        (total ? completed / total * 100 : 0) + "%";
 }
 
+// Uncheck everything
+document.getElementById("uncheckAll").addEventListener("click", () => {
+    tasks.forEach(task => task.done = false);
+    saveTasks();
+    renderTasks();
+});
+
+// Delete everything
+document.getElementById("deleteAll").addEventListener("click", () => {
+    if (!tasks.length) return;
+
+    if (confirm("Are you sure you want to delete all tasks?")) {
+        tasks = [];
+        saveTasks();
+        renderTasks();
+    }
+});
+
+// Add a new task
 document.getElementById("addForm").addEventListener("submit", event => {
     event.preventDefault();
 
@@ -338,8 +416,19 @@ document.getElementById("addForm").addEventListener("submit", event => {
     input.focus();
 });
 
+// Check when the app returns to the foreground
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) checkNewDay();
+});
+
+window.addEventListener("focus", checkNewDay);
+
+// Also check periodically while the app remains open
+setInterval(checkNewDay, 30000);
+
 saveTasks();
 renderTasks();
+
 </script>
 <script>
 if ("serviceWorker" in navigator) {
