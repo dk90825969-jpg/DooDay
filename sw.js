@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "dooday-v2";
+const CACHE_NAME = "dooday-v3";
 const FILES = [
     "./",
     "./index.html",
