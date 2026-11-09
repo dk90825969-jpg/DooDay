@@ -11,13 +11,65 @@
 <style>
 * { box-sizing: border-box; }
 
+:root {
+    --bg: #111318;
+    --card: #1c1f27;
+    --surface: #292d38;
+    --border: #2c303b;
+    --border-strong: #3b3f4c;
+    --text: #f4f4f5;
+    --muted: #999ba7;
+    --subtle: #777987;
+    --accent: #a78bfa;
+    --accent-text: #171421;
+    --progress-bg: #343744;
+    --celebration-bg: #302944;
+    --celebration-text: #d8c8ff;
+    --celebration-muted: #b8a9d9;
+}
+
+body[data-theme="light"] {
+    --bg: #f4f5f8;
+    --card: #ffffff;
+    --surface: #eeeeF3;
+    --border: #dedfe7;
+    --border-strong: #c9cad4;
+    --text: #171717;
+    --muted: #555560;
+    --subtle: #777780;
+    --accent: #7654d6;
+    --accent-text: #ffffff;
+    --progress-bg: #dedee6;
+    --celebration-bg: #eee8ff;
+    --celebration-text: #5333a0;
+    --celebration-muted: #7256b2;
+}
+
+body[data-theme="midnight"] {
+    --bg: #000000;
+    --card: #090909;
+    --surface: #151515;
+    --border: #242424;
+    --border-strong: #383838;
+    --text: #ffffff;
+    --muted: #aaaaaa;
+    --subtle: #777777;
+    --accent: #ffffff;
+    --accent-text: #000000;
+    --progress-bg: #292929;
+    --celebration-bg: #191919;
+    --celebration-text: #ffffff;
+    --celebration-muted: #aaaaaa;
+}
+
 body {
     margin: 0;
     min-height: 100vh;
-    background: #111318;
-    color: #f4f4f5;
+    background: var(--bg);
+    color: var(--text);
     font-family: Arial, sans-serif;
     padding: 35px 18px;
+    transition: background .2s, color .2s;
 }
 
 .app {
@@ -38,10 +90,10 @@ header {
     letter-spacing: -1px;
 }
 
-.logo span { color: #a78bfa; }
+.logo span { color: var(--accent); }
 
 .date {
-    color: #999ba7;
+    color: var(--muted);
     font-size: 13px;
 }
 
@@ -51,14 +103,14 @@ h1 {
 }
 
 .subtitle {
-    color: #999ba7;
+    color: var(--muted);
     margin-bottom: 30px;
     font-size: 14px;
 }
 
 .card {
-    background: #1c1f27;
-    border: 1px solid #2c303b;
+    background: var(--card);
+    border: 1px solid var(--border);
     border-radius: 16px;
     padding: 22px;
 }
@@ -76,13 +128,13 @@ h1 {
 }
 
 .progress-text {
-    color: #a78bfa;
+    color: var(--accent);
     font-size: 13px;
 }
 
 .progress {
     height: 6px;
-    background: #343744;
+    background: var(--progress-bg);
     border-radius: 10px;
     overflow: hidden;
     margin-bottom: 15px;
@@ -91,12 +143,12 @@ h1 {
 .progress-fill {
     height: 100%;
     width: 0%;
-    background: #a78bfa;
+    background: var(--accent);
     transition: width .2s;
 }
 
 .streak {
-    color: #fbbf24;
+    color: var(--accent);
     font-size: 13px;
     margin-bottom: 22px;
 }
@@ -117,33 +169,29 @@ h1 {
     transition: background .15s;
 }
 
-.task.dragging {
-    opacity: .4;
-}
+.task.dragging { opacity: .4; }
 
-.task.drag-over {
-    background: #343044;
-}
+.task.drag-over { background: var(--surface); }
 
 .task input {
     appearance: none;
     width: 21px;
     height: 21px;
     min-width: 21px;
-    border: 2px solid #686b7a;
+    border: 2px solid var(--subtle);
     border-radius: 7px;
     cursor: pointer;
 }
 
 .task input:checked {
-    background: #a78bfa;
-    border-color: #a78bfa;
+    background: var(--accent);
+    border-color: var(--accent);
 }
 
 .task input:checked::after {
     content: "✓";
     display: block;
-    color: #171421;
+    color: var(--accent-text);
     font-size: 15px;
     font-weight: bold;
     text-align: center;
@@ -158,20 +206,25 @@ h1 {
 
 .task.done .task-name {
     text-decoration: line-through;
-    color: #777987;
+    color: var(--subtle);
 }
 
 .delete, .move {
     background: none;
     border: none;
-    color: #777987;
+    color: var(--subtle);
     cursor: pointer;
     font-size: 17px;
     padding: 5px;
 }
 
 .delete:hover { color: #f87171; }
-.move:hover { color: #a78bfa; }
+.move:hover { color: var(--accent); }
+
+.move:disabled {
+    opacity: .2;
+    cursor: default;
+}
 
 .task-actions {
     display: flex;
@@ -182,21 +235,21 @@ h1 {
 .actions {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
 }
 
 .actions button, #undoButton {
     flex: 1;
     padding: 11px 8px;
     border-radius: 9px;
-    border: 1px solid #3b3f4c;
-    background: #292d38;
-    color: #f4f4f5;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
     cursor: pointer;
     font-size: 13px;
 }
 
-#uncheckAll:hover { border-color: #a78bfa; }
+#uncheckAll:hover { border-color: var(--accent); }
 
 #deleteAll:hover {
     border-color: #f87171;
@@ -222,20 +275,20 @@ h1 {
 .add-task input {
     flex: 1;
     min-width: 0;
-    background: #292d38;
-    border: 1px solid #3b3f4c;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
     border-radius: 9px;
     padding: 13px;
-    color: white;
+    color: var(--text);
     outline: none;
     font-size: 14px;
 }
 
-.add-task input:focus { border-color: #a78bfa; }
+.add-task input:focus { border-color: var(--accent); }
 
 .add-task button {
-    background: #a78bfa;
-    color: #171421;
+    background: var(--accent);
+    color: var(--accent-text);
     border: none;
     border-radius: 9px;
     padding: 0 17px;
@@ -243,16 +296,14 @@ h1 {
     cursor: pointer;
 }
 
-.add-task button:hover { background: #b9a3ff; }
-
 .celebration {
     display: none;
     text-align: center;
     padding: 15px;
     margin-bottom: 18px;
     border-radius: 12px;
-    background: #302944;
-    color: #d8c8ff;
+    background: var(--celebration-bg);
+    color: var(--celebration-text);
     animation: pop .35s ease;
 }
 
@@ -266,7 +317,7 @@ h1 {
 
 .celebration span {
     font-size: 13px;
-    color: #b8a9d9;
+    color: var(--celebration-muted);
 }
 
 @keyframes pop {
@@ -274,9 +325,57 @@ h1 {
     to { transform: scale(1); opacity: 1; }
 }
 
+.theme-section {
+    margin-top: 23px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+}
+
+.theme-label {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 11px;
+}
+
+.themes {
+    display: flex;
+    gap: 9px;
+}
+
+.theme-button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 11px 5px;
+    border-radius: 9px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.theme-button.active {
+    border: 2px solid var(--accent);
+    padding: 10px 4px;
+}
+
+.theme-dot {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    border: 1px solid #777777;
+}
+
+.theme-dot.purple { background: #a78bfa; }
+.theme-dot.light { background: #ffffff; }
+.theme-dot.midnight { background: #000000; }
+
 .footer {
     text-align: center;
-    color: #777987;
+    color: var(--subtle);
     font-size: 12px;
     margin-top: 25px;
 }
@@ -284,11 +383,13 @@ h1 {
 @media (max-width: 400px) {
     body { padding: 25px 12px; }
     .card { padding: 17px; }
+    .theme-button { font-size: 11px; }
 }
+
 </style>
 </head>
 
-<body>
+<body data-theme="purple">
 <div class="app">
 
     <header>
@@ -300,6 +401,7 @@ h1 {
     <div class="subtitle">Let's get things done, one at a time.</div>
 
     <section class="card">
+
         <div class="card-header">
             <h2>My checklist</h2>
             <div class="progress-text" id="progressText">0/0 done</div>
@@ -321,7 +423,7 @@ h1 {
             <button id="deleteAll">♲ Delete all</button>
         </div>
 
-        <button id="undoButton" disabled>↶ Undo last deletion</button>
+        <button id="undoButton" disabled>↶ Undo deletion (0)</button>
 
         <div id="taskList"></div>
 
@@ -335,6 +437,28 @@ h1 {
             >
             <button type="submit">+ Add</button>
         </form>
+
+        <div class="theme-section">
+            <div class="theme-label">Appearance</div>
+
+            <div class="themes">
+                <button class="theme-button" data-theme="purple">
+                    <span class="theme-dot purple"></span>
+                    Purple
+                </button>
+
+                <button class="theme-button" data-theme="light">
+                    <span class="theme-dot light"></span>
+                    Light
+                </button>
+
+                <button class="theme-button" data-theme="midnight">
+                    <span class="theme-dot midnight"></span>
+                    Midnight
+                </button>
+            </div>
+        </div>
+
     </section>
 
     <div class="footer">
@@ -376,17 +500,56 @@ let tasks = saved?.tasks || [
 ];
 
 let completedDates = saved?.completedDates || [];
-let undoAction = null;
+let undoStack = saved?.undoStack || [];
 let draggedIndex = null;
+
+let currentTheme = saved?.theme || "purple";
 
 function saveTasks() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
         date: today,
         tasks: tasks,
-        completedDates: completedDates
+        completedDates: completedDates,
+        undoStack: undoStack,
+        theme: currentTheme
     }));
 }
 
+// Themes
+function setTheme(theme) {
+    if (!["purple", "light", "midnight"].includes(theme)) {
+        theme = "purple";
+    }
+
+    currentTheme = theme;
+    document.body.dataset.theme = theme;
+
+    const themeColors = {
+        purple: "#111318",
+        light: "#f4f5f8",
+        midnight: "#000000"
+    };
+
+    document.querySelector('meta[name="theme-color"]')
+        .setAttribute("content", themeColors[theme]);
+
+    document.querySelectorAll(".theme-button").forEach(button => {
+        button.classList.toggle(
+            "active",
+            button.dataset.theme === theme
+        );
+    });
+
+    saveTasks();
+}
+
+document.querySelectorAll(".theme-button").forEach(button => {
+    button.addEventListener("click", () => {
+        setTheme(button.dataset.theme);
+    });
+});
+
+// Streaks
 function wasCompletedToday() {
     return completedDates.includes(today);
 }
@@ -394,13 +557,13 @@ function wasCompletedToday() {
 function recordCompletion() {
     if (tasks.length === 0) return;
 
-    const allDone = tasks.every(task => task.done);
-
-    if (allDone && !wasCompletedToday()) {
-        completedDates.push(today);
-        saveTasks();
+    if (tasks.every(task => task.done)) {
+        if (!wasCompletedToday()) {
+            completedDates.push(today);
+        }
 
         document.getElementById("celebration").classList.add("show");
+        saveTasks();
     }
 }
 
@@ -432,15 +595,18 @@ function getStreak() {
 
 function updateStreak() {
     const count = getStreak();
+
     document.getElementById("streak").textContent =
         `🔥 ${count} day${count === 1 ? "" : "s"} streak`;
 }
 
+// Daily reset
 function checkNewDay() {
     const newDate = getLocalDate();
 
     if (newDate !== today) {
         today = newDate;
+
         tasks.forEach(task => task.done = false);
 
         updateDate();
@@ -455,10 +621,44 @@ if (saved && saved.date !== today) {
     tasks.forEach(task => task.done = false);
 }
 
+// Undo history
 function updateUndoButton() {
-    document.getElementById("undoButton").disabled = !undoAction;
+    const button = document.getElementById("undoButton");
+    const count = undoStack.length;
+
+    button.disabled = count === 0;
+    button.textContent = count === 0
+        ? "↶ Undo deletion (0)"
+        : `↶ Undo deletion (${count})`;
 }
 
+function undoDeletion() {
+    if (undoStack.length === 0) return;
+
+    const action = undoStack.pop();
+
+    if (action.type === "delete") {
+        tasks.splice(
+            Math.min(action.index, tasks.length),
+            0,
+            action.task
+        );
+    }
+
+    if (action.type === "deleteAll") {
+        tasks = action.tasks;
+    }
+
+    saveTasks();
+    renderTasks();
+}
+
+document.getElementById("undoButton").addEventListener(
+    "click",
+    undoDeletion
+);
+
+// Rendering
 function renderTasks() {
     const list = document.getElementById("taskList");
     list.innerHTML = "";
@@ -468,13 +668,16 @@ function renderTasks() {
         row.className = "task" + (task.done ? " done" : "");
         row.draggable = true;
 
+        // Drag and drop
         row.addEventListener("dragstart", () => {
             draggedIndex = index;
             row.classList.add("dragging");
         });
 
         row.addEventListener("dragend", () => {
+            draggedIndex = null;
             row.classList.remove("dragging");
+
             document.querySelectorAll(".task").forEach(el =>
                 el.classList.remove("drag-over")
             );
@@ -522,6 +725,7 @@ function renderTasks() {
         const taskActions = document.createElement("div");
         taskActions.className = "task-actions";
 
+        // Move up
         const up = document.createElement("button");
         up.className = "move";
         up.textContent = "↑";
@@ -530,12 +734,15 @@ function renderTasks() {
 
         up.addEventListener("click", () => {
             if (index === 0) return;
+
             [tasks[index - 1], tasks[index]] =
                 [tasks[index], tasks[index - 1]];
+
             saveTasks();
             renderTasks();
         });
 
+        // Move down
         const down = document.createElement("button");
         down.className = "move";
         down.textContent = "↓";
@@ -544,25 +751,30 @@ function renderTasks() {
 
         down.addEventListener("click", () => {
             if (index === tasks.length - 1) return;
+
             [tasks[index + 1], tasks[index]] =
                 [tasks[index], tasks[index + 1]];
+
             saveTasks();
             renderTasks();
         });
 
+        // Delete individual task
         const remove = document.createElement("button");
         remove.className = "delete";
         remove.textContent = "×";
         remove.title = "Delete task";
 
         remove.addEventListener("click", () => {
-            undoAction = {
-                items: [{ task: tasks[index], index: index }]
-            };
+            undoStack.push({
+                type: "delete",
+                task: tasks[index],
+                index: index
+            });
 
             tasks.splice(index, 1);
+
             saveTasks();
-            updateUndoButton();
             renderTasks();
         });
 
@@ -580,52 +792,44 @@ function renderTasks() {
     document.getElementById("progressFill").style.width =
         (total ? completed / total * 100 : 0) + "%";
 
+    if (tasks.length > 0 && tasks.every(task => task.done) && wasCompletedToday()) {
+        document.getElementById("celebration").classList.add("show");
+    } else {
+        document.getElementById("celebration").classList.remove("show");
+    }
+
     updateStreak();
     updateUndoButton();
 }
 
-// Undo the last deletion
-document.getElementById("undoButton").addEventListener("click", () => {
-    if (!undoAction) return;
-
-    undoAction.items
-        .sort((a, b) => a.index - b.index)
-        .forEach(item => {
-            tasks.splice(item.index, 0, item.task);
-        });
-
-    undoAction = null;
-    saveTasks();
-    renderTasks();
-});
-
 // Uncheck everything
 document.getElementById("uncheckAll").addEventListener("click", () => {
     tasks.forEach(task => task.done = false);
+
     document.getElementById("celebration").classList.remove("show");
+
     saveTasks();
     renderTasks();
 });
 
-// Delete everything
+// Delete all
 document.getElementById("deleteAll").addEventListener("click", () => {
     if (!tasks.length) return;
 
     if (confirm("Are you sure you want to delete all tasks?")) {
-        undoAction = {
-            items: tasks.map((task, index) => ({
-                task: task,
-                index: index
-            }))
-        };
+        undoStack.push({
+            type: "deleteAll",
+            tasks: [...tasks]
+        });
 
         tasks = [];
+
         saveTasks();
         renderTasks();
     }
 });
 
-// Add a new task
+// Add task
 document.getElementById("addForm").addEventListener("submit", event => {
     event.preventDefault();
 
@@ -635,6 +839,7 @@ document.getElementById("addForm").addEventListener("submit", event => {
     if (!name) return;
 
     tasks.push({ name: name, done: false });
+
     saveTasks();
     renderTasks();
 
@@ -642,7 +847,7 @@ document.getElementById("addForm").addEventListener("submit", event => {
     input.focus();
 });
 
-// Check when the app returns to the foreground
+// Check for a new day
 document.addEventListener("visibilitychange", () => {
     if (!document.hidden) checkNewDay();
 });
@@ -651,6 +856,8 @@ window.addEventListener("focus", checkNewDay);
 
 setInterval(checkNewDay, 30000);
 
+// Initialize
+setTheme(currentTheme);
 saveTasks();
 renderTasks();
 </script>
