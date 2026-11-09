@@ -85,7 +85,7 @@ h1 {
     background: #343744;
     border-radius: 10px;
     overflow: hidden;
-    margin-bottom: 22px;
+    margin-bottom: 15px;
 }
 
 .progress-fill {
@@ -93,6 +93,12 @@ h1 {
     width: 0%;
     background: #a78bfa;
     transition: width .2s;
+}
+
+.streak {
+    color: #fbbf24;
+    font-size: 13px;
+    margin-bottom: 22px;
 }
 
 #taskList {
@@ -104,8 +110,19 @@ h1 {
 .task {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     min-width: 0;
+    padding: 3px;
+    border-radius: 8px;
+    transition: background .15s;
+}
+
+.task.dragging {
+    opacity: .4;
+}
+
+.task.drag-over {
+    background: #343044;
 }
 
 .task input {
@@ -144,16 +161,57 @@ h1 {
     color: #777987;
 }
 
-.delete {
+.delete, .move {
     background: none;
     border: none;
     color: #777987;
     cursor: pointer;
-    font-size: 19px;
-    padding: 4px 7px;
+    font-size: 17px;
+    padding: 5px;
 }
 
 .delete:hover { color: #f87171; }
+.move:hover { color: #a78bfa; }
+
+.task-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.actions button, #undoButton {
+    flex: 1;
+    padding: 11px 8px;
+    border-radius: 9px;
+    border: 1px solid #3b3f4c;
+    background: #292d38;
+    color: #f4f4f5;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+#uncheckAll:hover { border-color: #a78bfa; }
+
+#deleteAll:hover {
+    border-color: #f87171;
+    color: #f87171;
+}
+
+#undoButton {
+    width: 100%;
+    margin-bottom: 18px;
+}
+
+#undoButton:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+}
 
 .add-task {
     display: flex;
@@ -173,9 +231,7 @@ h1 {
     font-size: 14px;
 }
 
-.add-task input:focus {
-    border-color: #a78bfa;
-}
+.add-task input:focus { border-color: #a78bfa; }
 
 .add-task button {
     background: #a78bfa;
@@ -189,6 +245,35 @@ h1 {
 
 .add-task button:hover { background: #b9a3ff; }
 
+.celebration {
+    display: none;
+    text-align: center;
+    padding: 15px;
+    margin-bottom: 18px;
+    border-radius: 12px;
+    background: #302944;
+    color: #d8c8ff;
+    animation: pop .35s ease;
+}
+
+.celebration.show { display: block; }
+
+.celebration strong {
+    display: block;
+    font-size: 17px;
+    margin-bottom: 5px;
+}
+
+.celebration span {
+    font-size: 13px;
+    color: #b8a9d9;
+}
+
+@keyframes pop {
+    from { transform: scale(.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
 .footer {
     text-align: center;
     color: #777987;
@@ -199,31 +284,6 @@ h1 {
 @media (max-width: 400px) {
     body { padding: 25px 12px; }
     .card { padding: 17px; }
-}
-    .actions {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.actions button {
-    flex: 1;
-    padding: 11px 8px;
-    border-radius: 9px;
-    border: 1px solid #3b3f4c;
-    background: #292d38;
-    color: #f4f4f5;
-    cursor: pointer;
-    font-size: 13px;
-}
-
-#uncheckAll:hover {
-    border-color: #a78bfa;
-}
-
-#deleteAll:hover {
-    border-color: #f87171;
-    color: #f87171;
 }
 </style>
 </head>
@@ -248,11 +308,20 @@ h1 {
         <div class="progress">
             <div class="progress-fill" id="progressFill"></div>
         </div>
-        
+
+        <div class="streak" id="streak">🔥 0 day streak</div>
+
+        <div class="celebration" id="celebration">
+            <strong>🎉 Checklist complete!</strong>
+            <span>You've got everything done. Great job!</span>
+        </div>
+
         <div class="actions">
-    <button id="uncheckAll">↻ Uncheck all</button>
-    <button id="deleteAll">♲ Delete all</button>
-</div>
+            <button id="uncheckAll">↻ Uncheck all</button>
+            <button id="deleteAll">♲ Delete all</button>
+        </div>
+
+        <button id="undoButton" disabled>↶ Undo last deletion</button>
 
         <div id="taskList"></div>
 
@@ -275,7 +344,6 @@ h1 {
 </div>
 
 <script>
-
 const STORAGE_KEY = "dooday-data";
 
 function getLocalDate() {
@@ -286,14 +354,17 @@ function getLocalDate() {
     return `${year}-${month}-${day}`;
 }
 
-let today = getLocalDate();
+function updateDate() {
+    document.getElementById("date").textContent =
+        new Date().toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "short",
+            day: "numeric"
+        });
+}
 
-document.getElementById("date").textContent =
-    new Date().toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "short",
-        day: "numeric"
-    });
+let today = getLocalDate();
+updateDate();
 
 let saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
 
@@ -304,11 +375,65 @@ let tasks = saved?.tasks || [
     { name: "Take my wallet", done: false }
 ];
 
+let completedDates = saved?.completedDates || [];
+let undoAction = null;
+let draggedIndex = null;
+
 function saveTasks() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
         date: today,
-        tasks: tasks
+        tasks: tasks,
+        completedDates: completedDates
     }));
+}
+
+function wasCompletedToday() {
+    return completedDates.includes(today);
+}
+
+function recordCompletion() {
+    if (tasks.length === 0) return;
+
+    const allDone = tasks.every(task => task.done);
+
+    if (allDone && !wasCompletedToday()) {
+        completedDates.push(today);
+        saveTasks();
+
+        document.getElementById("celebration").classList.add("show");
+    }
+}
+
+function getStreak() {
+    const dates = new Set(completedDates);
+    let date = new Date();
+
+    if (!dates.has(today)) {
+        date.setDate(date.getDate() - 1);
+    }
+
+    let streak = 0;
+
+    while (true) {
+        const key = [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, "0"),
+            String(date.getDate()).padStart(2, "0")
+        ].join("-");
+
+        if (!dates.has(key)) break;
+
+        streak++;
+        date.setDate(date.getDate() - 1);
+    }
+
+    return streak;
+}
+
+function updateStreak() {
+    const count = getStreak();
+    document.getElementById("streak").textContent =
+        `🔥 ${count} day${count === 1 ? "" : "s"} streak`;
 }
 
 function checkNewDay() {
@@ -317,21 +442,21 @@ function checkNewDay() {
     if (newDate !== today) {
         today = newDate;
         tasks.forEach(task => task.done = false);
+
+        updateDate();
+        document.getElementById("celebration").classList.remove("show");
+
         saveTasks();
-
-        document.getElementById("date").textContent =
-            new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "short",
-                day: "numeric"
-            });
-
         renderTasks();
     }
 }
 
 if (saved && saved.date !== today) {
     tasks.forEach(task => task.done = false);
+}
+
+function updateUndoButton() {
+    document.getElementById("undoButton").disabled = !undoAction;
 }
 
 function renderTasks() {
@@ -341,6 +466,42 @@ function renderTasks() {
     tasks.forEach((task, index) => {
         const row = document.createElement("div");
         row.className = "task" + (task.done ? " done" : "");
+        row.draggable = true;
+
+        row.addEventListener("dragstart", () => {
+            draggedIndex = index;
+            row.classList.add("dragging");
+        });
+
+        row.addEventListener("dragend", () => {
+            row.classList.remove("dragging");
+            document.querySelectorAll(".task").forEach(el =>
+                el.classList.remove("drag-over")
+            );
+        });
+
+        row.addEventListener("dragover", event => {
+            event.preventDefault();
+            row.classList.add("drag-over");
+        });
+
+        row.addEventListener("dragleave", () => {
+            row.classList.remove("drag-over");
+        });
+
+        row.addEventListener("drop", event => {
+            event.preventDefault();
+            row.classList.remove("drag-over");
+
+            if (draggedIndex === null || draggedIndex === index) return;
+
+            const movedTask = tasks.splice(draggedIndex, 1)[0];
+            tasks.splice(index, 0, movedTask);
+
+            draggedIndex = null;
+            saveTasks();
+            renderTasks();
+        });
 
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
@@ -348,6 +509,8 @@ function renderTasks() {
 
         checkbox.addEventListener("change", () => {
             tasks[index].done = checkbox.checked;
+
+            recordCompletion();
             saveTasks();
             renderTasks();
         });
@@ -356,18 +519,55 @@ function renderTasks() {
         name.className = "task-name";
         name.textContent = task.name;
 
+        const taskActions = document.createElement("div");
+        taskActions.className = "task-actions";
+
+        const up = document.createElement("button");
+        up.className = "move";
+        up.textContent = "↑";
+        up.title = "Move up";
+        up.disabled = index === 0;
+
+        up.addEventListener("click", () => {
+            if (index === 0) return;
+            [tasks[index - 1], tasks[index]] =
+                [tasks[index], tasks[index - 1]];
+            saveTasks();
+            renderTasks();
+        });
+
+        const down = document.createElement("button");
+        down.className = "move";
+        down.textContent = "↓";
+        down.title = "Move down";
+        down.disabled = index === tasks.length - 1;
+
+        down.addEventListener("click", () => {
+            if (index === tasks.length - 1) return;
+            [tasks[index + 1], tasks[index]] =
+                [tasks[index], tasks[index + 1]];
+            saveTasks();
+            renderTasks();
+        });
+
         const remove = document.createElement("button");
         remove.className = "delete";
         remove.textContent = "×";
         remove.title = "Delete task";
 
         remove.addEventListener("click", () => {
+            undoAction = {
+                items: [{ task: tasks[index], index: index }]
+            };
+
             tasks.splice(index, 1);
             saveTasks();
+            updateUndoButton();
             renderTasks();
         });
 
-        row.append(checkbox, name, remove);
+        taskActions.append(up, down, remove);
+        row.append(checkbox, name, taskActions);
         list.appendChild(row);
     });
 
@@ -379,11 +579,30 @@ function renderTasks() {
 
     document.getElementById("progressFill").style.width =
         (total ? completed / total * 100 : 0) + "%";
+
+    updateStreak();
+    updateUndoButton();
 }
+
+// Undo the last deletion
+document.getElementById("undoButton").addEventListener("click", () => {
+    if (!undoAction) return;
+
+    undoAction.items
+        .sort((a, b) => a.index - b.index)
+        .forEach(item => {
+            tasks.splice(item.index, 0, item.task);
+        });
+
+    undoAction = null;
+    saveTasks();
+    renderTasks();
+});
 
 // Uncheck everything
 document.getElementById("uncheckAll").addEventListener("click", () => {
     tasks.forEach(task => task.done = false);
+    document.getElementById("celebration").classList.remove("show");
     saveTasks();
     renderTasks();
 });
@@ -393,6 +612,13 @@ document.getElementById("deleteAll").addEventListener("click", () => {
     if (!tasks.length) return;
 
     if (confirm("Are you sure you want to delete all tasks?")) {
+        undoAction = {
+            items: tasks.map((task, index) => ({
+                task: task,
+                index: index
+            }))
+        };
+
         tasks = [];
         saveTasks();
         renderTasks();
@@ -423,18 +649,19 @@ document.addEventListener("visibilitychange", () => {
 
 window.addEventListener("focus", checkNewDay);
 
-// Also check periodically while the app remains open
 setInterval(checkNewDay, 30000);
 
 saveTasks();
 renderTasks();
-
 </script>
+
 <script>
 if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./sw.js")
         .then(() => console.log("DooDay is ready!"))
         .catch(error => console.error(error));
+}
 </script>
+
 </body>
 </html>
