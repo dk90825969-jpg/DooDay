@@ -1,0 +1,11 @@
+
+{
+  "name": "DooDay",
+  "short_name": "DooDay",
+  "description": "Your day. Your tasks. Your way.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#111318",
+  "theme_color": "#111318"
+}
