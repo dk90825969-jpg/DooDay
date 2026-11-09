@@ -1,9 +1,12 @@
 
-const CACHE_NAME = "dooday-v3";
+const CACHE_NAME = "dooday-v4";
+
 const FILES = [
     "./",
     "./index.html",
-    "./manifest.json"
+    "./manifest.json",
+    "./dooday-192.png",
+    "./dooday-512.png"
 ];
 
 self.addEventListener("install", event => {
